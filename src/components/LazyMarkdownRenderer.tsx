@@ -1,6 +1,17 @@
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 
-const MarkdownRendererComponent = lazy(() => import('./MarkdownRenderer'));
+const MarkdownRendererComponent = lazy(() => 
+  import('./MarkdownRenderer').catch(err => {
+    if (err.message?.includes('Failed to fetch dynamically imported module') || err.message?.includes('Loading chunk')) {
+      const hasReloaded = sessionStorage.getItem('chunk-retry-reloaded');
+      if (!hasReloaded) {
+        sessionStorage.setItem('chunk-retry-reloaded', 'true');
+        window.location.reload();
+      }
+    }
+    throw err;
+  })
+);
 
 interface LazyMarkdownRendererProps {
   markdownText: string;

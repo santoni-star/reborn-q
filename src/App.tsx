@@ -172,6 +172,9 @@ function App() {
   }, [settings.language, i18n]);
 
   useEffect(() => {
+    // Clear chunk-retry flag if app loads successfully
+    sessionStorage.removeItem('chunk-retry-reloaded');
+    
     const unsubscribe = firebaseService.subscribeToAuth(async (user) => {
       if (user) {
           setCurrentUser({ uid: user.uid, email: user.email, displayName: user.displayName, photoURL: user.photoURL });
