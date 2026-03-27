@@ -1,0 +1,71 @@
+{
+  "manifest_version": 3,
+  "name": "Voice Scratchpad Extension",
+  "version": "1.2.5",
+  "description": "Enhanced AI capabilities for any webpage",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*",
+    "https://gemini.google/*",
+    "https://claude.ai/*",
+    "https://x.com/*",
+    "https://grok.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*", 
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://gemini.google/*",
+        "https://claude.ai/*",
+        "https://x.com/*",
+        "https://grok.com/*"
+      ],
+      "js": ["content.js"]
+    },
+    {
+      "matches": [
+        "http://localhost/*", 
+        "http://127.0.0.1/*", 
+        "http://localhost:*/*", 
+        "http://127.0.0.1:*/*", 
+        "https://reborn-v2-dev-voice.web.app/*", 
+        "https://reborn-v2-dev-voice.firebaseapp.com/*",
+        "https://scratchpad-86a79.web.app/*", 
+        "https://scratchpad-86a79.firebaseapp.com/*"
+      ],
+      "js": ["localhost-bridge.js"]
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "css": []
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+        "http://localhost/*", 
+        "http://127.0.0.1/*", 
+        "http://localhost:*/*", 
+        "http://127.0.0.1:*/*", 
+        "https://reborn-v2-dev-voice.web.app/*", 
+        "https://reborn-v2-dev-voice.firebaseapp.com/*"
+    ]
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Voice Scratchpad Extension"
+  }
+}

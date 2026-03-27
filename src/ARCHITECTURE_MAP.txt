@@ -1,0 +1,29 @@
+================================================================================
+                       РЕБОРН V2: АРХІТЕКТУРНА МАПА
+================================================================================
+
+[ UI LAYER ] (Presentation)
+      │
+      ├─► App.tsx (Main Layout)
+      ├─► Sidebar.tsx
+      └─► Components/ (VoiceInput, NoteList, etc.)
+            │
+[ STATE LAYER ] (Zustand Slices)
+      │
+      ├─► dataSlice.ts (Notes/Projects)
+      ├─► syncSlice.ts (AI/Sync Status)
+      └─► uiSlice.ts   (Modals/Views)
+            │
+[ DOMAIN LAYER ] (Business Logic / Interfaces)
+      │
+      ├─► /notes (Models)
+      ├─► /sync (ISyncProvider.ts)  <-- ТУТ ВІДБУВАЄТЬСЯ РЕФАКТОРИНГ
+      └─► /ai (IAiProvider.ts)
+            │
+[ INFRASTRUCTURE LAYER ] (Implementation / Adapters)
+      │
+      ├─► /db (Dexie.js / IndexedDB)
+      └─► /adapters (Sync Adapters: Firebase, GDrive, LocalFS)
+            │
+[ EXTERNAL SERVICES ] (Firebase, Google Cloud, AI Providers)
+================================================================================

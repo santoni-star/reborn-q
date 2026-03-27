@@ -1,0 +1,5 @@
+src/hooks/
+├── useSpeechRecognition.ts
+├── useNoteSync.ts
+├── useProjectManagement.ts
+└── useEncryption.ts

@@ -1,0 +1,69 @@
+  isAuthenticated(): boolean {
+    return firebaseService.isAuthenticated();
+  }
+
+  private activeFirebaseUnsubscribe: (() => void) | null = null;
+
+  startRealtimeListeners() {
+    if (this.activeFirebaseUnsubscribe) return;
+    
+    console.log("[UnifiedSync] Starting Real-time Cloud Listeners...");
+    try {
+        this.activeFirebaseUnsubscribe = firebaseService.subscribeToAllNotes((firebaseNotes) => {
+            console.log(`[UnifiedSync] Cloud update received: ${firebaseNotes.length} notes`);
+            this.processCloudNotes(firebaseNotes);
+        });
+    } catch (e) {
+        console.error("[UnifiedSync] Failed to start real-time listeners:", e);
+    }
+  }
+
+  stopRealtimeListeners() {
+    if (this.activeFirebaseUnsubscribe) {
+        this.activeFirebaseUnsubscribe();
+        this.activeFirebaseUnsubscribe = null;
+        console.log("[UnifiedSync] Stopped Real-time Cloud Listeners");
+    }
+  }
+
+  async enableSync(): Promise<void> {
+    console.log('[UnifiedSync] Sync enabled');
+  }
+
+  async disableSync(): Promise<void> {
+    console.log('[UnifiedSync] Sync disabled');
+  }
+
+  async deleteNote(note: Note, projectName: string): Promise<void> {
+    // 0. Remove from pending queue immediately
+    this.queue = this.queue.filter(task => task.note.id !== note.id);
+
+    const deletePromises: Promise<any>[] = [];
+
+    if (firebaseService.isAuthenticated()) {
+      deletePromises.push(
+        firebaseService.deleteNote(note.id).catch(error => {
+          console.error('[UnifiedSync] Error deleting note from Firebase:', error);
+        })
+      );
+    }
+
+    // Direct call to syncService without redundant await reconnect()
+    deletePromises.push(
+      syncService.deleteNoteFile(note, projectName).catch(error => {
+        console.error('[UnifiedSync] Error deleting note from local filesystem:', error);
+      })
+    );
+
+    // Delete from IndexedDB as well
+    deletePromises.push(
+      db.notes.delete(note.id).catch(error => {
+        console.error('[UnifiedSync] Error deleting note from IndexedDB:', error);
+      })
+    );
+
+    await Promise.allSettled(deletePromises);
+  }
+}
+
+export const unifiedSyncService = new UnifiedSyncService();

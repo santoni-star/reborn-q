@@ -1,0 +1,10 @@
+node_modules
+dist
+.firebase
+*.log
+.env*
+venv
+.vscode
+.idea
+build
+package-lock.json

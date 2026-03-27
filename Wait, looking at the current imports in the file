@@ -1,0 +1,10 @@
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { Mic, Square, XCircle, Send, Sparkles, Check, Bug, Lightbulb, CheckSquare, FileCode } from 'lucide-react';
+import { clsx } from 'clsx';
+import { useStore } from '../store/useStore';
+import { type Note } from '../types/entities';
+import { aiService } from '../services/aiService';
+import { unifiedSyncService } from '../services/unifiedSyncService';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useTranslation } from 'react-i18next';
+import { analyzeWithRegex } from '../utils/localAi';

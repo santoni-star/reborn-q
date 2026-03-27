@@ -1,0 +1,10 @@
+import type { Note, Project } from '../types/entities';
+import { firebaseService } from './firebaseService';
+import { syncService } from './syncService';
+import { googleDriveSyncService } from './googleDriveSyncService';
+import { useStore } from '../store/useStore';
+import db, { type SyncLog } from './db';
+import i18n from '../i18n';
+import { encryptText, decryptText } from '../utils/crypto';
+              const { googleDriveSyncService } = await import('./googleDriveSyncService');
+          import('../utils/toast').then(({ toast }) => toast.error("Firebase deletion failed"));

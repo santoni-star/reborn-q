@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Google Speech API Polyfill for Firefox",
+  "version": "1.0",
+  "description": "Injects a Web Speech API polyfill to make Firefox compatible with Chrome-only speech apps.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["polyfill.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

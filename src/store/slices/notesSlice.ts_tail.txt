@@ -1,0 +1,11 @@
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('notes', JSON.stringify(newNotes));
+      }
+      return { notes: newNotes };
+    });
+  },
+  loadInitialData: async () => {
+    // Stub - will be implemented properly
+    console.log('[Store] Initial data loaded');
+  },
+});

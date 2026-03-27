@@ -1,0 +1,6 @@
+src/components/
+├── NoteCard.tsx
+├── ProjectList.tsx
+├── VoiceInput.tsx
+├── SettingsPanel.tsx
+└── SyncStatus.tsx
