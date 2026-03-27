@@ -6,6 +6,7 @@ export interface DataSlice {
   notes: Note[];
   projects: Project[];
   activeProjectId: string | null;
+  editingProjectId: string | null;
   searchQuery: string;
   searchCache: Record<string, Note[]>;
   isLoading: boolean;
@@ -14,13 +15,15 @@ export interface DataSlice {
   setNotes: (notes: Note[]) => void;
   setProjects: (projects: Project[]) => void;
   setActiveProject: (id: string | null) => void;
+  setEditingProject: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
   
   loadInitialData: () => Promise<void>;
-  addNote: (note: Note) => Promise<void>;
+  addNote: (noteOrTitle: any, content?: string, type?: any, tags?: string[]) => Promise<string>;
   updateNote: (id: string, updates: Partial<Note>) => Promise<Note | undefined>;
-  deleteNote: (id: string) => Promise<void>;
+  deleteNote: (id: string | Note) => Promise<void>;
   toggleNoteCompleted: (id: string) => Promise<void>;
+  addProject: (project: Project) => Promise<void>;
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
 }
@@ -29,6 +32,7 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
   notes: [],
   projects: [],
   activeProjectId: '1',
+  editingProjectId: null,
   searchQuery: '',
   searchCache: {},
   isLoading: true,
@@ -37,8 +41,10 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
   setNotes: (notes) => set({ notes, searchCache: {} }),
   setProjects: (projects) => set({ projects }),
   setActiveProject: (id) => set({ activeProjectId: id }),
+  setEditingProject: (id) => set({ editingProjectId: id }),
 
   setSearchQuery: (searchQuery) => {
+    // ... (rest of search logic same as before)
     const query = searchQuery.toLowerCase().trim();
     
     if (query === '') {
@@ -46,17 +52,13 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
       return;
     }
 
-    // Check cache first
     const cachedResults = get().searchCache[query];
     if (cachedResults) {
       set({ searchQuery });
       return;
     }
 
-    // Perform optimized search
-    const startTime = performance.now();
     const allNotes = get().notes;
-
     const filteredNotes = allNotes.filter(note => {
       const lowerTitle = (note.title || '').toLowerCase();
       const lowerContent = (note.content || '').toLowerCase();
@@ -67,60 +69,90 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
       return lowerTitle.includes(query) || lowerContent.includes(query) || hasMatchingTag;
     });
 
-    // Update cache
     const newCache = { ...get().searchCache };
     newCache[query] = filteredNotes;
-
-    // Limit cache size (LRU-ish)
     if (Object.keys(newCache).length > 50) {
       const keys = Object.keys(newCache);
       for (let i = 0; i < 10; i++) delete newCache[keys[i]];
     }
 
     set({ searchQuery, searchCache: newCache });
-
-    const duration = performance.now() - startTime;
-    if (duration > 10) {
-      console.log(`[Search] Took ${Math.round(duration)}ms for "${query}"`);
-    }
   },
 
   loadInitialData: async () => {
     set({ isLoading: true });
     try {
-      const [notes, projects, dbSettings] = await Promise.all([
+      // 1. Load from Local IndexedDB
+      const [notes, projects] = await Promise.all([
         db.notes.toArray(),
-        db.projects.toArray(),
-        db.getSettings()
+        db.projects.toArray()
       ]);
 
       set({
         notes: notes.sort((a, b) => b.createdAt - a.createdAt),
         projects: projects.length > 0 ? projects : [{ id: '1', name: 'Inbox', createdAt: Date.now(), updatedAt: Date.now() }],
-        settings: dbSettings ? { ...(get() as any).settings, ...dbSettings } : (get() as any).settings,
         isLoading: false,
         searchCache: {}
       });
-      return dbSettings;
+
+      // 2. Load from Firebase if authenticated
+      const { firebaseService } = await import('../../services/firebaseService');
+      if (firebaseService.isAuthenticated()) {
+        console.log('[DataSlice] Loading initial data from Firebase...');
+        const [remoteNotes, remoteProjects] = await Promise.all([
+          firebaseService.getNotes(),
+          firebaseService.getProjects()
+        ]);
+
+        if (remoteNotes.length > 0 || remoteProjects.length > 0) {
+            set({ 
+              notes: (remoteNotes as Note[]).sort((a, b) => b.createdAt - a.createdAt), 
+              projects: remoteProjects as Project[] 
+            });
+            
+            // Optionally sync remote to local if local is empty? 
+            // For now just update state, sync will handle the rest.
+        }
+      }
     } catch (e) {
       console.error("Data load failed", e);
       set({ isLoading: false });
     }
   },
 
-  addNote: async (note) => {
+  addNote: async (noteOrTitle, content, type, tags) => {
+    let note: Note;
+    if (typeof noteOrTitle === 'object' && noteOrTitle.id) {
+        note = noteOrTitle as Note;
+    } else {
+        note = {
+            id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            projectId: get().activeProjectId || '1',
+            title: noteOrTitle as string,
+            content: content || '',
+            type: type || 'generic',
+            tags: tags || [],
+            createdAt: Date.now(),
+            syncStatus: 'pending'
+        };
+    }
+
     await db.notes.add(note);
     set(state => ({ 
       notes: [note, ...state.notes],
-      searchCache: {} // Invalidate cache on change
+      searchCache: {}
     }));
+    
+    const { unifiedSyncService } = await import('../../services/unifiedSyncService');
+    const project = get().projects.find(p => p.id === note.projectId);
+    await unifiedSyncService.syncNote(note, project?.name);
+    return note.id;
   },
 
   updateNote: async (id, updates) => {
     const note = get().notes.find(n => n.id === id);
     if (!note) return;
     
-    // Якщо оновлюємо лише статус синхронізації, не позначаємо як dirty і не збільшуємо версію
     const isSyncUpdate = Object.keys(updates).every(k => ['syncStatus', 'lastSyncedAt', 'isDirty', 'isEncrypted'].includes(k));
     
     const updated = { 
@@ -136,15 +168,26 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
       notes: state.notes.map(n => n.id === id ? updated : n),
       searchCache: {} 
     }));
+
+    if (!isSyncUpdate) {
+        const { unifiedSyncService } = await import('../../services/unifiedSyncService');
+        const project = get().projects.find(p => p.id === updated.projectId);
+        await unifiedSyncService.syncNote(updated, project?.name);
+    }
+
     return updated;
   },
 
-  deleteNote: async (id) => {
+  deleteNote: async (note) => {
+    const id = typeof note === 'string' ? note : note.id;
     await db.notes.delete(id);
     set(state => ({ 
       notes: state.notes.filter(n => n.id !== id),
       searchCache: {}
     }));
+
+    const { firebaseService } = await import('../../services/firebaseService');
+    await firebaseService.deleteNote(id);
   },
 
   toggleNoteCompleted: async (id) => {
@@ -162,6 +205,28 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
         notes: state.notes.map(n => n.id === id ? updated : n),
         searchCache: {}
     }));
+    
+    const { unifiedSyncService } = await import('../../services/unifiedSyncService');
+    const project = get().projects.find(p => p.id === updated.projectId);
+    await unifiedSyncService.syncNote(updated, project?.name);
+  },
+
+  addProject: async (project) => {
+    const existing = get().projects.find(p => p.name.toLowerCase() === project.name.toLowerCase());
+    if (existing) {
+        const msg = `Project with name "${project.name}" already exists.`;
+        const { toast } = await import('../../utils/toast');
+        toast.error(msg);
+        throw new Error('Duplicate project name');
+    }
+
+    await db.projects.add(project);
+    set(state => ({
+        projects: [...state.projects, project]
+    }));
+    
+    const { unifiedSyncService } = await import('../../services/unifiedSyncService');
+    await unifiedSyncService.syncProject(project);
   },
 
   updateProject: async (id, updates) => {
@@ -172,13 +237,15 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
     set(state => ({
         projects: state.projects.map(p => p.id === id ? updated : p)
     }));
+    
+    const { unifiedSyncService } = await import('../../services/unifiedSyncService');
+    await unifiedSyncService.syncProject(updated);
   },
 
   deleteProject: async (id) => {
     const project = get().projects.find(p => p.id === id);
     if (!project) return;
 
-    // 1. Unified Sync (Cloud + FileSystem)
     try {
         const { unifiedSyncService } = await import('../../services/unifiedSyncService');
         await unifiedSyncService.deleteProject(id, project.name);
@@ -186,11 +253,9 @@ export const createDataSlice: StateCreator<DataSlice> = (set, get) => ({
         console.error("[DataSlice] Unified delete failed:", e);
     }
 
-    // 2. Local DB
     await db.projects.delete(id);
     await db.notes.where('projectId').equals(id).delete();
     
-    // 3. Store State
     set(state => ({
         projects: state.projects.filter(p => p.id !== id),
         notes: state.notes.filter(n => n.projectId !== id),

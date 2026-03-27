@@ -1,21 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 import { transcriptionService } from '../services/transcriptionService';
 
 declare global {
   interface Window {
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
   }
 }
 
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
+type SpeechRecognition = any;
+type SpeechRecognitionEvent = any;
+type SpeechRecognitionErrorEvent = any;
 
 interface UseSpeechRecognitionProps {
   onResult?: (text: string) => void;

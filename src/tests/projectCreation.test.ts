@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 import { db } from '../services/db';
 import { toast } from '../utils/toast';
 
@@ -19,7 +19,8 @@ describe('Project Creation', () => {
     await db.notes.clear();
     // Reset store
     const store = useStore.getState();
-    await store.initialize();
+    await store.loadInitialData();
+    await store.loadSettings();
   });
 
   it('should prevent creating a project with a duplicate name', async () => {

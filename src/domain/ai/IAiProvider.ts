@@ -10,6 +10,7 @@ export interface ProcessedNoteData {
 
 export interface AiRequestOptions {
   content: string;
+  provider?: string;
   context?: string;
   masterContext?: string;
   language?: string;

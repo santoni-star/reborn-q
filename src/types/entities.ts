@@ -66,7 +66,7 @@ export const createProject = (name: string): Project => ({
 });
 
 export type AiProvider = 'browser' | 'openai' | 'chatgpt-tab' | 'gemini-tab' | 'claude-tab' | 'grok-tab' | 'browser-native-extension' | 'free-ai' | 'gemini-api' | 'groq-api';
-export type AppLanguage = 'en' | 'uk' | 'pl' | 'de';
+export type AppLanguage = 'en' | 'uk' | 'pl' | 'de' | 'auto';
 export type FontSize = 'sm' | 'base' | 'lg' | 'xl';
 
 export interface AppSettings {

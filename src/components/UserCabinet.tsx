@@ -1,4 +1,4 @@
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 import { firebaseService } from '../services/firebaseService';
 import { syncService } from '../services/syncService';
 import { unifiedSyncService } from '../services/unifiedSyncService';
@@ -158,8 +158,11 @@ export const UserCabinet = ({ isOpen, onClose }: { isOpen: boolean, onClose: () 
           }
 
           if (firebaseService.isAuthenticated()) {
-              const cloudNotes = await unifiedSyncService.downloadNotesFromCloud();
-              setNotes(cloudNotes);
+              const cloudData = await unifiedSyncService.downloadNotesFromCloud();
+              if (cloudData) {
+                  setNotes(cloudData.notes);
+                  setProjects(cloudData.projects);
+              }
           }
       }
     } catch (error: any) {

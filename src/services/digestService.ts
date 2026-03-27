@@ -1,4 +1,4 @@
-import type { Note, Project } from '../types/entities';
+import type { Note, Project, AiProvider } from '../types/entities';
 import { aiService } from './aiService';
 import i18n from '../i18n';
 
@@ -10,7 +10,7 @@ export interface ProjectMasterDigest {
 }
 
 export const digestService = {
-  async generateMasterDigest(notes: Note[], activeProject: Project | undefined, provider: string, keys: { openai: string; gemini?: string; groq?: string; googleAccessToken?: string }): Promise<ProjectMasterDigest> {
+  async generateMasterDigest(notes: Note[], activeProject: Project | undefined, provider: AiProvider, keys: { openai: string; gemini?: string; groq?: string; googleAccessToken?: string }): Promise<ProjectMasterDigest> {
     const notesSummary = notes.map(n => ({
       t: n.title,
       content: n.content.slice(0, 150),

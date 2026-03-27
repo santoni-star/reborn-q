@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 import db from '../services/db';
 import 'fake-indexeddb/auto';
 

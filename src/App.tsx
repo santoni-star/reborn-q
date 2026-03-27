@@ -45,7 +45,10 @@ function App() {
 
   // Initialize Data
   useEffect(() => {
-    storeData.loadInitialData().then(() => {
+    Promise.all([
+      storeData.loadInitialData(),
+      storeData.loadSettings()
+    ]).then(() => {
         setIsLoaded(true);
     });
   }, []);
@@ -175,7 +178,8 @@ function App() {
     // Clear chunk-retry flag if app loads successfully
     sessionStorage.removeItem('chunk-retry-reloaded');
     
-    const unsubscribe = firebaseService.subscribeToAuth(async (user) => {
+    // Safety check for firebase authentication
+    const authUnsubscribe = firebaseService.subscribeToAuth((user) => {
       if (user) {
           setCurrentUser({ uid: user.uid, email: user.email, displayName: user.displayName, photoURL: user.photoURL });
           
@@ -192,8 +196,9 @@ function App() {
       }
       setIsAuthChecked(true);
     });
+
     return () => {
-        unsubscribe();
+        if (authUnsubscribe) authUnsubscribe();
         unifiedSyncService.stopRealtimeListeners();
     };
   }, [setCurrentUser, settings.cloudSyncEnabled]);

@@ -12,15 +12,14 @@ export interface UiSlice {
   isInsightModalOpen: boolean;
   isReadmeOpen: boolean;
   isAuthOpen: boolean;
+  isCreatingProject: boolean;
+  isRenamingProject: boolean;
   isDeletingProject: string | null;
-  currentMobileTab: MobileTab;
+  isDeletingNote: any | null;
+  currentMobileTab: string;
   sidebarWidth: number;
   rightPanelWidth: number;
-  sidebarSections: {
-    workspace: boolean;
-    smartViews: boolean;
-    projects: boolean;
-  };
+  sidebarSections: { id: string; label: string; visible: boolean }[];
   
   setZenMode: (enabled: boolean) => void;
   setSidebarVisible: (visible: boolean) => void;
@@ -31,32 +30,38 @@ export interface UiSlice {
   setInsightModalOpen: (open: boolean) => void;
   setReadmeOpen: (open: boolean) => void;
   setAuthOpen: (open: boolean) => void;
+  setCreatingProject: (creating: boolean) => void;
+  setRenamingProject: (renaming: boolean) => void;
   setDeletingProject: (id: string | null) => void;
-  setMobileTab: (tab: MobileTab) => void;
+  setDeletingNote: (note: any | null) => void;
+  setMobileTab: (tab: string) => void;
   setSidebarWidth: (width: number) => void;
   setRightPanelWidth: (width: number) => void;
-  toggleSidebarSection: (section: 'workspace' | 'smartViews' | 'projects') => void;
+  toggleSidebarSection: (sectionId: string) => void;
 }
 
 export const createUiSlice: StateCreator<UiSlice> = (set) => ({
   isZenMode: false,
   isSidebarVisible: true,
-  isRightPanelVisible: true,
+  isRightPanelVisible: false,
   isSettingsOpen: false,
   isUserCabinetOpen: false,
   isProjectDigestOpen: false,
   isInsightModalOpen: false,
   isReadmeOpen: false,
   isAuthOpen: false,
+  isCreatingProject: false,
+  isRenamingProject: false,
   isDeletingProject: null,
-  currentMobileTab: 'workspace',
-  sidebarWidth: 260,
-  rightPanelWidth: 320,
-  sidebarSections: {
-    workspace: true,
-    smartViews: true,
-    projects: true,
-  },
+  isDeletingNote: null,
+  currentMobileTab: 'notes',
+  sidebarWidth: typeof window !== 'undefined' ? Number(localStorage.getItem('sidebarWidth') || '280') : 280,
+  rightPanelWidth: typeof window !== 'undefined' ? Number(localStorage.getItem('rightPanelWidth') || '400') : 400,
+  sidebarSections: [
+    { id: 'workspace', label: 'Workspace', visible: true },
+    { id: 'smartViews', label: 'Smart Views', visible: true },
+    { id: 'projects', label: 'Projects', visible: true },
+  ],
 
   setZenMode: (enabled) => set({ isZenMode: enabled }),
   setSidebarVisible: (visible) => set({ isSidebarVisible: visible }),
@@ -67,11 +72,26 @@ export const createUiSlice: StateCreator<UiSlice> = (set) => ({
   setInsightModalOpen: (open) => set({ isInsightModalOpen: open }),
   setReadmeOpen: (open) => set({ isReadmeOpen: open }),
   setAuthOpen: (open) => set({ isAuthOpen: open }),
+  setCreatingProject: (creating) => set({ isCreatingProject: creating }),
+  setRenamingProject: (renaming) => set({ isRenamingProject: renaming }),
   setDeletingProject: (id) => set({ isDeletingProject: id }),
+  setDeletingNote: (note) => set({ isDeletingNote: note }),
   setMobileTab: (tab) => set({ currentMobileTab: tab }),
-  setSidebarWidth: (width) => set({ sidebarWidth: width }),
-  setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
-  toggleSidebarSection: (section) => set((state) => ({
-    sidebarSections: { ...state.sidebarSections, [section]: !state.sidebarSections[section] }
+  setSidebarWidth: (width) => {
+    set({ sidebarWidth: width });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarWidth', String(width));
+    }
+  },
+  setRightPanelWidth: (width) => {
+    set({ rightPanelWidth: width });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('rightPanelWidth', String(width));
+    }
+  },
+  toggleSidebarSection: (sectionId) => set((state) => ({
+    sidebarSections: state.sidebarSections.map(s => 
+      s.id === sectionId ? { ...s, visible: !s.visible } : s
+    )
   })),
 });

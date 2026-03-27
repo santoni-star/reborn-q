@@ -1,4 +1,4 @@
-﻿import { useStore } from '../store/useStore';
+﻿import { useStore } from '../store';
 import { Hash, Brain, Edit2, Trash2, Plus, ArrowRight, Cloud, CloudOff, Loader2, AlertCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -105,22 +105,23 @@ export const ProjectList = () => {
                         {projectNotes.length > 0 && (
                           <>
                             {projectNotes.some(n => n.syncStatus === 'error') ? (
-                              <AlertCircle className="w-2 h-2 text-red-400" title={t('common.syncStatus.error')} />
+                              <span title={t('common.syncStatus.error')}><AlertCircle className="w-2 h-2 text-red-400" /></span>
                             ) : projectNotes.some(n => n.syncStatus === 'pending') ? (
-                              <Loader2 className="w-2 h-2 text-indigo-400 animate-spin" title={t('common.syncStatus.pending')} />
+                              <span title={t('common.syncStatus.pending')}><Loader2 className="w-2 h-2 text-indigo-400 animate-spin" /></span>
                             ) : projectNotes.some(n => !n.syncStatus) ? (
-                              <CloudOff className="w-2 h-2 opacity-20" title={t('common.syncStatus.offline')} />
+                              <span title={t('common.syncStatus.offline')}><CloudOff className="w-2 h-2 opacity-20" /></span>
                             ) : (
-                              <Cloud className="w-2 h-2 text-green-500/50" title={t('common.syncStatus.synced')} />
+                              <span title={t('common.syncStatus.synced')}><Cloud className="w-2 h-2 text-green-500/50" /></span>
                             )}
                           </>
                         )}
-                      </div>
+
                       {project.knowledge && (
                         <span className="text-xs font-black uppercase tracking-tight bg-indigo-500/20 text-indigo-300 px-0.5 py-0.125 rounded truncate">
                           {t('projects.aiBrainActive')}
                         </span>
                       )}
+                    </div>
                     </div>
                     <ArrowRight className="w-3 h-3 opacity-20 group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0" />
                   </div>

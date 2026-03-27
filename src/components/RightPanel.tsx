@@ -1,15 +1,15 @@
 import { Sparkles, ArrowRight, MonitorPlay, Zap, FileText, Loader2, Globe, X, Download, Check } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 import { type Note } from '../types/entities';
 import { aiService } from '../services/aiService';
-import { syncService } from '../services/syncService';
+import { unifiedSyncService } from '../services/unifiedSyncService';
 import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { toast } from '../utils/toast';
 
 export const RightPanel = () => {
-  const { notes, activeProjectId, projects, addNote, settings, setRightPanelVisible, aiStatus, aiStatusMsg, setAiStatus } = useStore();
+  const { notes, activeProjectId, projects, addNote, updateNote, settings, setRightPanelVisible, aiStatus, aiStatusMsg, setAiStatus } = useStore();
   const { t } = useTranslation();
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -386,7 +386,7 @@ export const RightPanel = () => {
 
     if (existing) {
         updateNote(id, { content });
-        await syncService.syncNote({ ...existing, content }, projectName);
+        await unifiedSyncService.syncNote({ ...existing, content }, projectName);
     } else {
         const newDigest: Note = {
             id,
@@ -399,7 +399,7 @@ export const RightPanel = () => {
             createdAt: Date.now()
         };
         addNote(newDigest);
-        await syncService.syncNote(newDigest, projectName);
+        await unifiedSyncService.syncNote(newDigest, projectName);
     }
   };
 

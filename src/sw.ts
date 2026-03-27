@@ -147,17 +147,17 @@ async function doBackgroundSync() {
 // Listen for messages from the main thread
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SYNC_NOTES') {
-    // @ts-expect-error - register is part of Background Sync API
-    self.registration.sync.register('sync-notes');
+    // @ts-ignore - register is part of Background Sync API
+    (self.registration as any).sync.register('sync-notes');
   }
 
   if (event.data && event.data.type === 'PENDING_NOTES_RESPONSE') {
     const pendingNotes = event.data.pendingNotes as NoteData[];
     processPendingNotesFromMainThread(pendingNotes);
   }
-});
+  });
 
-async function processPendingNotesFromMainThread(pendingNotes: NoteData[]) {
+  async function processPendingNotesFromMainThread(pendingNotes: NoteData[]) {
   for (const note of pendingNotes) {
     try {
       const response = await fetch('/api/sync-note', {
@@ -187,42 +187,4 @@ async function processPendingNotesFromMainThread(pendingNotes: NoteData[]) {
       console.error(`Error syncing note ${note.id}:`, err);
     }
   }
-}
-
-// Define types for TypeScript
-type IDBValidKey = string | number | Date | BufferSource | IDBValidKey[];
-
-interface IDBDatabase {
-  readonly name: string;
-  readonly version: number;
-  readonly objectStoreNames: DOMStringList;
-  close(): void;
-  createObjectStore(name: string, optionalParameters?: IDBObjectStoreParameters): IDBObjectStore;
-  deleteObjectStore(name: string): void;
-  transaction(storeNames: string | string[], mode?: IDBTransactionMode): IDBTransaction;
-  addEventListener<K extends keyof ServiceWorkerGlobalScopeEventMap>(
-    type: K,
-    listener: (this: ServiceWorkerGlobalScope, ev: ServiceWorkerGlobalScopeEventMap[K]) => unknown,
-    options?: boolean | AddEventListenerOptions
-  ): void;
-}
-
-interface IDBObjectStore {
-  readonly indexNames: DOMStringList;
-  readonly keyPath: string | null;
-  readonly name: string;
-  readonly transaction: IDBTransaction;
-  autoIncrement: boolean;
-  add(value: unknown, key?: IDBValidKey): IDBRequest;
-  clear(): IDBRequest;
-  count(key?: IDBValidKey): IDBRequest<IDBCursorWithValue>;
-  delete(key: IDBValidKey): IDBRequest;
-  get(key: IDBValidKey): IDBRequest<unknown>;
-  getAll(query?: IDBValidKey, count?: number): IDBRequest<unknown[]>;
-  getAllKeys(query?: IDBValidKey, count?: number): IDBRequest<IDBValidKey[]>;
-  getKey(key: IDBValidKey): IDBRequest<IDBValidKey>;
-  index(name: string): IDBIndex;
-  openCursor(range?: IDBValidKey, direction?: IDBCursorDirection): IDBRequest<IDBCursorWithValue>;
-  openKeyCursor(range?: IDBValidKey, direction?: IDBCursorDirection): IDBRequest<IDBCursor>;
-  put(value: unknown, key?: IDBValidKey): IDBRequest;
-}
+  }

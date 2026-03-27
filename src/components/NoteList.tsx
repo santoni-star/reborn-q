@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
+import { type Note } from '../types/entities';
 import { Search } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -172,11 +172,29 @@ export class UnifiedSyncService {
 
   async deleteNote(note: Note, projectName?: string): Promise<void> {
     const promises: Promise<void>[] = [];
+    const noteId = typeof note === 'string' ? note : (note as any).id || (note as any).uid;
 
     if (this.cloudSyncEnabled && firebaseService.isAuthenticated()) {
-      promises.push(
-        firebaseService.deleteNote(note.id).catch(e => console.warn('[UnifiedSync] Firebase deleteNote failed:', e))
-      );
+      if (navigator.onLine) {
+        promises.push(
+          firebaseService.deleteNote(noteId).catch(async (e) => {
+            console.warn('[UnifiedSync] Firebase deleteNote failed, adding to queue:', e);
+            await db.pendingSync.add({
+              entityType: 'note',
+              entityId: noteId,
+              operation: 'delete',
+              timestamp: Date.now()
+            });
+          })
+        );
+      } else {
+        await db.pendingSync.add({
+          entityType: 'note',
+          entityId: noteId,
+          operation: 'delete',
+          timestamp: Date.now()
+        });
+      }
     }
 
     if (this.localSyncEnabled && projectName) {
@@ -192,9 +210,26 @@ export class UnifiedSyncService {
     const promises: Promise<void>[] = [];
 
     if (this.cloudSyncEnabled && firebaseService.isAuthenticated()) {
-      promises.push(
-        firebaseService.deleteProject(id).catch(e => console.warn('[UnifiedSync] Firebase deleteProject failed:', e))
-      );
+      if (navigator.onLine) {
+        promises.push(
+          firebaseService.deleteProject(id).catch(async (e) => {
+            console.warn('[UnifiedSync] Firebase deleteProject failed, adding to queue:', e);
+            await db.pendingSync.add({
+              entityType: 'project',
+              entityId: id,
+              operation: 'delete',
+              timestamp: Date.now()
+            });
+          })
+        );
+      } else {
+        await db.pendingSync.add({
+          entityType: 'project',
+          entityId: id,
+          operation: 'delete',
+          timestamp: Date.now()
+        });
+      }
     }
 
     if (this.localSyncEnabled) {

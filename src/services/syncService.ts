@@ -2,6 +2,15 @@ import { get, set } from 'idb-keyval';
 import type { Note, Project } from '../types/entities';
 import db from './db';
 
+declare global {
+  interface Window {
+    showDirectoryPicker(options?: any): Promise<FileSystemDirectoryHandle>;
+  }
+}
+
+type FileSystemHandlePermissionDescriptor = any;
+type FileSystemDirectoryHandle = any;
+type FileSystemFileHandle = any;
 const DIR_HANDLE_KEY = 'dev_voice_root_dir';
 const FILE_HASHES_KEY = 'dev_voice_file_hashes';
 

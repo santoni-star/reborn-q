@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Note } from '../types/entities';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { unifiedSyncService } from '../services/unifiedSyncService';
@@ -339,11 +339,12 @@ export const NoteItem = memo(({ note, projectName }: NoteItemProps) => {
                     </span>
                     <div className="w-px h-3 bg-white/10 mx-1" />
                     <div className="flex items-center gap-1">
-                      {note.syncStatus === 'pending' && <Loader2 className="w-2.5 h-2.5 text-indigo-400 animate-spin" title={t('common.syncStatus.pending')} />}
-                      {note.syncStatus === 'error' && <AlertCircle className="w-2.5 h-2.5 text-red-400" title={t('common.syncStatus.error')} />}
-                      {note.syncStatus === 'synced' && <Cloud className="w-2.5 h-2.5 text-emerald-500/70" title={t('common.syncStatus.synced')} />}
-                      {!note.syncStatus && <CloudOff className="w-2.5 h-2.5 opacity-30" title={t('common.syncStatus.offline')} />}
+                      {note.syncStatus === 'pending' && <span title={t('common.syncStatus.pending')}><Loader2 className="w-2.5 h-2.5 text-indigo-400 animate-spin" /></span>}
+                      {note.syncStatus === 'error' && <span title={t('common.syncStatus.error')}><AlertCircle className="w-2.5 h-2.5 text-red-400" /></span>}
+                      {note.syncStatus === 'synced' && <span title={t('common.syncStatus.synced')}><Cloud className="w-2.5 h-2.5 text-emerald-500/70" /></span>}
+                      {!note.syncStatus && <span title={t('common.syncStatus.offline')}><CloudOff className="w-2.5 h-2.5 opacity-30" /></span>}
                     </div>
+
                   </div>
                 </div>
             </div>

@@ -10,7 +10,11 @@ import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useTranslation } from 'react-i18next';
 import { analyzeWithRegex } from '../utils/localAi';
 
-export const VoiceInput = () => {
+interface VoiceInputProps {
+  onNoteCreated?: () => void;
+}
+
+export const VoiceInput = ({ onNoteCreated }: VoiceInputProps) => {
   const { 
     activeProjectId, 
     addNote, 
@@ -210,6 +214,7 @@ export const VoiceInput = () => {
 
             setShowSuccess(true);
             setDetectedType('generic');
+            if (onNoteCreated) onNoteCreated();
             
             // Success toast early
             import('../utils/toast').then(({ toast }) => {
